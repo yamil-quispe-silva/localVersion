@@ -6,8 +6,13 @@ import com.example.team41game.models.GameConfig;
 import com.example.team41game.models.Player;
 
 public class GameScreen2ViewModel extends ViewModel {
-    private GameConfig gameConfig = GameConfig.getGameConfig();
-    private Player player = Player.getPlayer();
+    private GameConfig gameConfig;
+    private Player player;
+
+    public GameScreen2ViewModel() {
+        gameConfig = GameConfig.getGameConfig();
+        player = Player.getPlayer();
+    }
 
     public void updateScore() {
         int newScore = player.getScore() - 1;

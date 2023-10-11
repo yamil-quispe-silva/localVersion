@@ -27,6 +27,14 @@ public class GameScreen1Activity extends AppCompatActivity {
     private TextView scoreDisplay;
     private GameScreen1ViewModel gameScreen1ViewModel;
 
+//    int[][] gameWorld = {
+//            {1, 1, 1, 1, 1},
+//            {1, 0, 0, 2, 1},
+//            {1, 0, 1, 0, 1},
+//            {1, 2, 0, 0, 1},
+//            {1, 1, 1, 1, 1}
+//    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +71,25 @@ public class GameScreen1Activity extends AppCompatActivity {
             }
         }, 10, 1000);
     }
+
+//    private void drawGameWorld() {
+//        Bitmap gameBitmap = Bitmap.createBitmap(
+//                gameWorld[0].length * tileWidth,
+//                gameWorld.length * tileHeight,
+//                Bitmap.Config.ARGB_8888
+//        );
+//        Canvas canvas = new Canvas(gameBitmap);
+//
+//        for (int i = 0; i < gameWorld.length; i++) {
+//            for (int j = 0; j < gameWorld[0].length; j++) {
+//                int tileID = gameWorld[i][j];
+//                Bitmap tileBitmap = tileMap.get(tileID);
+//                canvas.drawBitmap(tileBitmap, j * tileWidth, i * tileHeight, null);
+//            }
+//        }
+//
+//        gameImage.setImageBitmap(gameBitmap);
+//    }
 
     public void displayGameSettings() {
         nameField.setText(gameScreen1ViewModel.getPlayerName());

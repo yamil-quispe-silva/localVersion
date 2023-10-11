@@ -10,8 +10,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class GameScreen1ViewModel extends ViewModel {
-    private GameConfig gameConfig = GameConfig.getGameConfig();
-    private Player player = Player.getPlayer();
+    private GameConfig gameConfig;
+    private Player player;
+
+    public GameScreen1ViewModel() {
+        gameConfig = GameConfig.getGameConfig();
+        player = Player.getPlayer();
+    }
 
     public void updateScore() {
         int newScore = player.getScore() - 1;

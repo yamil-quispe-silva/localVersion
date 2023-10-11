@@ -6,8 +6,13 @@ import com.example.team41game.models.Leaderboard;
 import com.example.team41game.models.Player;
 
 public class EndScreenViewModel extends ViewModel {
-    private Leaderboard leaderboard = Leaderboard.getLeaderboard();
-    private Player player = Player.getPlayer();
+    private Leaderboard leaderboard;
+    private Player player;
+
+    public EndScreenViewModel() {
+        leaderboard = Leaderboard.getLeaderboard();
+        player = Player.getPlayer();
+    }
 
     public int getScore() {
         return player.getScore();

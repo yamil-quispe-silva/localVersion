@@ -6,8 +6,13 @@ import com.example.team41game.models.GameConfig;
 import com.example.team41game.models.Player;
 
 public class ConfigScreenViewModel extends ViewModel {
-    private Player player = Player.getPlayer();
-    private GameConfig gameConfig = GameConfig.getGameConfig();
+    private Player player;
+    private GameConfig gameConfig;
+
+    public ConfigScreenViewModel() {
+        player = Player.getPlayer();
+        gameConfig = GameConfig.getGameConfig();
+    }
 
     public boolean validateName(String name) {
         if (name != null && !name.replace(" ", "").isEmpty()) {
