@@ -5,11 +5,15 @@ import androidx.lifecycle.ViewModel;
 import com.example.team41game.models.GameConfig;
 import com.example.team41game.models.Player;
 
-public class GameScreen2ViewModel extends ViewModel {
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class GameScreenViewModel extends ViewModel {
     private GameConfig gameConfig;
     private Player player;
 
-    public GameScreen2ViewModel() {
+    public GameScreenViewModel() {
         gameConfig = GameConfig.getGameConfig();
         player = Player.getPlayer();
     }
@@ -23,6 +27,14 @@ public class GameScreen2ViewModel extends ViewModel {
         } else {
             player.setScore(newScore);
         }
+    }
+
+    public void initPlayerAttempt() {
+        player.setScore(100);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        String startTime = dateFormat.format(date);
+        player.setStartTime(startTime);
     }
 
     public String getPlayerName() {

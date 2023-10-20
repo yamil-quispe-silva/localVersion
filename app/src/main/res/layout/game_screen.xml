@@ -13,8 +13,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginBottom="260dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/game_pic" />
+        app:layout_constraintStart_toStartOf="parent"/>
 
 <!--    <GridLayout-->
 <!--        android:id="@+id/gameMap"-->
@@ -32,7 +31,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="128dp"
         android:layout_marginBottom="33dp"
-        android:background="@drawable/blocks"
         android:backgroundTint="#C31313"
         android:fontFamily="@font/averia_serif_libre_light"
         android:text="Next"
