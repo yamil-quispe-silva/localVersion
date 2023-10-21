@@ -1,5 +1,8 @@
 package com.example.team41game.models;
 
+import com.example.team41game.MovePattern;
+import com.example.team41game.Position;
+
 public class Player {
     private String name;
     private int health;
@@ -7,6 +10,8 @@ public class Player {
     private static volatile Player player;
     private int score;
     private String startTime;
+    private Position position;
+    private MovePattern movePattern;
 
     private Player() { }
 
@@ -61,4 +66,23 @@ public class Player {
         return this.startTime;
     }
 
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public MovePattern getMovePattern() {
+        return this.movePattern;
+    }
+
+    public void setMovePattern(MovePattern movePattern) {
+        this.movePattern = movePattern;
+    }
+
+    public void doMove() {
+        movePattern.move(this.position);
+    }
 }

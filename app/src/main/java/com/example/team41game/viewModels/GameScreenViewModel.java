@@ -9,9 +9,24 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.example.team41game.Subscriber;
+import com.example.team41game.MovePattern;
+import com.example.team41game.MoveLeft;
+import com.example.team41game.MoveRight;
+import com.example.team41game.MoveUp;
+import com.example.team41game.MoveDown;
+import java.util.List;
+import java.util.ArrayList;
+
+import com.example.team41game.models.Enemy;
+import com.example.team41game.models.Room;
+import com.example.team41game.Position;
+
 public class GameScreenViewModel extends ViewModel {
     private GameConfig gameConfig;
     private Player player;
+    private Room room;
+    private List<Subscriber> subscribers = new ArrayList<>();
 
     public GameScreenViewModel() {
         gameConfig = GameConfig.getGameConfig();
@@ -64,5 +79,91 @@ public class GameScreenViewModel extends ViewModel {
 
     public String getScore() {
         return String.format("Score: %d", player.getScore());
+    }
+
+    public int getPlayerX() {
+        return player.getPosition().getX();
+    }
+
+    public int getPlayerY() {
+        return player.getPosition().getY();
+    }
+
+    //set player's starting position in new screen
+    public void initPlayerPosition(int x, int y) {
+        player.setPosition(new Position(x, y));
+    }
+
+    // set floor layout for current room
+    public void initRoom(int[][] layout) {
+        room = new Room(layout);
+    }
+
+    public void addEnemy(int type, int x, int y) {
+        room.addEnemy(new Enemy(type, x, y));
+    }
+
+    public int[] getEnemyTypes() {
+        int[] types = new int[room.getEnemies().size()];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = room.getEnemies().get(i).getType();
+        }
+        return types;
+    }
+
+    public int[] getEnemyX() {
+        int[] x = new int[room.getEnemies().size()];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = room.getEnemies().get(i).getPosition().getX();
+        }
+        return x;
+    }
+
+    public int[] getEnemyY() {
+        int[] y = new int[room.getEnemies().size()];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = room.getEnemies().get(i).getPosition().getY();
+        }
+        return y;
+    }
+
+    public void subscribe(Subscriber subscriber) {
+        subscribers.add(subscriber);
+    }
+
+    public void unsubscribe(Subscriber subscriber) {
+        subscribers.remove(subscriber);
+    }
+
+    public void notifySubscribers() {
+        for (Subscriber s: subscribers) {
+            s.update(this);
+        }
+    }
+
+    public void setPlayerMovePattern(MovePattern movePattern) {
+        player.setMovePattern(movePattern);
+    }
+
+    public void doPlayerMove() {
+        // do other movement checks here
+        if (inScreenLimit()) {
+            player.doMove();
+            notifySubscribers();
+        }
+    }
+
+    public boolean inScreenLimit() {
+        //check that player does not move off game screen, based on game bitmap sizes
+        if (player.getMovePattern() instanceof MoveLeft) {
+            return player.getPosition().getX() - 1 >= 0;
+        } else if (player.getMovePattern() instanceof MoveRight) {
+            return player.getPosition().getX() + 1 < room.getFloorLayout()[0].length;
+        } else if (player.getMovePattern() instanceof MoveUp) {
+            return player.getPosition().getY() - 1 >= 0;
+        } else if (player.getMovePattern() instanceof MoveDown) {
+            return player.getPosition().getY() + 1 < room.getFloorLayout().length;
+        }
+        return false;
     }
 }

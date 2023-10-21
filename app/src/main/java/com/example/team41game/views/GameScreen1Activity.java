@@ -18,14 +18,20 @@ import com.example.team41game.viewModels.GameScreenViewModel;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class GameScreen1Activity extends AppCompatActivity {
+import android.view.KeyEvent;
+import com.example.team41game.Subscriber;
+import com.example.team41game.MoveLeft;
+import com.example.team41game.MoveRight;
+import com.example.team41game.MoveUp;
+import com.example.team41game.MoveDown;
+
+public class GameScreen1Activity extends AppCompatActivity implements Subscriber {
     private Timer newTimer;
     private Handler handler;
     private ImageView gameImage;
     private TextView nameField;
     private TextView healthField;
     private TextView difficultyField;
-    private ImageView playerView;
     private Button nextBtn;
     private TextView scoreDisplay;
     private GameScreenViewModel gameScreenViewModel;
@@ -38,21 +44,14 @@ public class GameScreen1Activity extends AppCompatActivity {
             {1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1},
             {0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0},
             {0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0},
-            {0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0}
-    };
-    private int[][] enemyPlacement = {
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 6, 7, 0, 0, 0, 0, 8, 8, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+            {0, 0, 0, 0, 1, 6, 1, 0, 0, 0, 0}
     };
     private int tileWidth = 42;
     private int tileHeight = 42;
+
+    private Bitmap sprite;
+    private Bitmap[] enemyTiles = new Bitmap[4];
+    private Bitmap[] roomTiles = new Bitmap[9];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +59,7 @@ public class GameScreen1Activity extends AppCompatActivity {
         setContentView(R.layout.game_screen);
 
         gameScreenViewModel = new ViewModelProvider(this).get(GameScreenViewModel.class);
+        gameScreenViewModel.subscribe(this);
         newTimer = new Timer();
         handler = new Handler();
 
@@ -67,11 +67,16 @@ public class GameScreen1Activity extends AppCompatActivity {
         nameField = findViewById(R.id.nameField);
         healthField = findViewById(R.id.healthField);
         difficultyField = findViewById(R.id.difficultyField);
-        playerView = findViewById(R.id.playerView);
         nextBtn = findViewById(R.id.NextButton);
         scoreDisplay = findViewById(R.id.scoreDisplay);
 
+        initGameTiles();
+
         displayGameSettings();
+        gameScreenViewModel.initPlayerPosition(1, 1);
+        gameScreenViewModel.initRoom(gameWorld);
+        gameScreenViewModel.addEnemy(0, 1, 3);
+        gameScreenViewModel.addEnemy(1, 8, 1);
         drawGameWorld();
 
         nextBtn.setOnClickListener(v -> {
@@ -91,6 +96,28 @@ public class GameScreen1Activity extends AppCompatActivity {
         }, 10, 1000);
     }
 
+    private void initGameTiles() {
+        sprite = BitmapFactory.decodeResource(getResources(),
+                gameScreenViewModel.getPlayerAvatar());
+
+        enemyTiles[0] = BitmapFactory.decodeResource(getResources(), R.drawable.monster_bies);
+        enemyTiles[1] = BitmapFactory.decodeResource(getResources(), R.drawable.monster_zombie);
+        enemyTiles[2] =
+                BitmapFactory.decodeResource(getResources(), R.drawable.monster_orc_veteran);
+        enemyTiles[3] =
+                BitmapFactory.decodeResource(getResources(), R.drawable.monster_elemental_goo);
+
+        roomTiles[0] = BitmapFactory.decodeResource(getResources(), R.drawable.black);
+        roomTiles[1] = BitmapFactory.decodeResource(getResources(), R.drawable.wall_front);
+        roomTiles[2] = BitmapFactory.decodeResource(getResources(), R.drawable.floor_light);
+        roomTiles[3] = BitmapFactory.decodeResource(getResources(), R.drawable.wall_flag_blue);
+        roomTiles[4] = BitmapFactory.decodeResource(getResources(), R.drawable.wall_flag_green);
+        roomTiles[5] = BitmapFactory.decodeResource(getResources(), R.drawable.wall_flag_red);
+        roomTiles[6] = BitmapFactory.decodeResource(getResources(), R.drawable.door_open);
+        roomTiles[7] = BitmapFactory.decodeResource(getResources(), R.drawable.door_closed);
+        roomTiles[8] = BitmapFactory.decodeResource(getResources(), R.drawable.chest_golden_closed);
+    }
+
     private void drawGameWorld() {
         Bitmap gameBitmap = Bitmap.createBitmap(
                 gameWorld[0].length * tileWidth,
@@ -103,79 +130,62 @@ public class GameScreen1Activity extends AppCompatActivity {
         for (int i = 0; i < gameWorld.length; i++) {
             for (int j = 0; j < gameWorld[0].length; j++) {
                 int tileID = gameWorld[i][j];
-                Bitmap tileBitmap = getTileBitmap(tileID);
+                Bitmap tileBitmap = roomTiles[tileID];
                 canvas.drawBitmap(tileBitmap, j * tileWidth, i * tileHeight, null);
             }
         }
 
-        for (int i = 0; i < enemyPlacement.length; i++) {
-            for (int j = 0; j < enemyPlacement[0].length; j++) {
-                int tileID = enemyPlacement[i][j];
-                if (tileID != 0 && tileID != 1) {
-                    Bitmap enemyTileBitmap = getTileBitmap(tileID);
-                    canvas.drawBitmap(enemyTileBitmap, j * tileWidth, i * tileHeight, null);
-                }
-            }
+        int[] enemyX = gameScreenViewModel.getEnemyX();
+        int[] enemyY = gameScreenViewModel.getEnemyY();
+        int[] enemyTypes = gameScreenViewModel.getEnemyTypes();
+        for (int i = 0; i < enemyTypes.length; i++) {
+            canvas.drawBitmap(enemyTiles[enemyTypes[i]], enemyX[i] * tileWidth,
+                    enemyY[i] * tileHeight, null);
         }
-        gameImage.setImageBitmap(gameBitmap);
-    }
 
-    public Bitmap getTileBitmap(int tileID) {
-        Bitmap tileBitmap = null;
-        switch (tileID) {
-        case 0:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.black);
-            break;
-        case 1:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wall_front);
-            break;
-        case 2:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.floor_light);
-            break;
-        case 3:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wall_flag_blue);
-            break;
-        case 4:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wall_flag_green);
-            break;
-        case 5:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wall_flag_red);
-            break;
-        case 6:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.npc_mage);
-            break;
-        case 7:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.npc_trickster);
-            break;
-        case 8:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.monster_ogre);
-            break;
-        case 9:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.door_closed);
-            break;
-        case 10:
-            tileBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.torch_2);
-            break;
-        case 11:
-            tileBitmap = BitmapFactory.decodeResource(getResources(),
-                    R.drawable.chest_golden_closed);
-            break;
-        default:
-            break;
-        }
-        return tileBitmap;
+        canvas.drawBitmap(sprite, gameScreenViewModel.getPlayerX() * tileWidth,
+                gameScreenViewModel.getPlayerY() * tileHeight, null);
+
+        gameImage.setImageBitmap(gameBitmap);
     }
 
     public void displayGameSettings() {
         nameField.setText(gameScreenViewModel.getPlayerName());
         healthField.setText(gameScreenViewModel.getHealth());
         difficultyField.setText(gameScreenViewModel.getDifficulty());
-        playerView.setImageResource(gameScreenViewModel.getPlayerAvatar());
     }
 
     private void displayNewScore() {
         gameScreenViewModel.updateScore();
         scoreDisplay.setText(gameScreenViewModel.getScore());
+    }
+
+    public void update(GameScreenViewModel subject) {
+        drawGameWorld();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+        case KeyEvent.KEYCODE_DPAD_LEFT:
+            gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
+            gameScreenViewModel.doPlayerMove();
+            return true;
+        case KeyEvent.KEYCODE_DPAD_RIGHT:
+            gameScreenViewModel.setPlayerMovePattern(new MoveRight());
+            gameScreenViewModel.doPlayerMove();
+            return true;
+        case KeyEvent.KEYCODE_DPAD_UP:
+            gameScreenViewModel.setPlayerMovePattern(new MoveUp());
+            gameScreenViewModel.doPlayerMove();
+            return true;
+        case KeyEvent.KEYCODE_DPAD_DOWN:
+            gameScreenViewModel.setPlayerMovePattern(new MoveDown());
+            gameScreenViewModel.doPlayerMove();
+            return true;
+        default:
+            return super.onKeyDown(keyCode, event);
+        }
     }
 }
 

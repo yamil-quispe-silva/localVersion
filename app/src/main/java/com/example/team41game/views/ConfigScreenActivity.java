@@ -22,8 +22,8 @@ public class ConfigScreenActivity extends AppCompatActivity {
     private Button rightArrowBtn;
     private Button continueBtn;
     private RadioGroup difficultyRadioGroup;
-    private int[] avatarResources = {R.drawable.priest1_v1_1, R.drawable.skeleton_v2_1,
-                                     R.drawable.skull_v2_1};
+    private int[] avatarResources = {R.drawable.npc_dwarf_2, R.drawable.npc_elf,
+                                     R.drawable.npc_barbarian};
     private int currentAvatarIndex = 0;
     private ConfigScreenViewModel configScreenViewModel;
 
