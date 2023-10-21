@@ -66,7 +66,6 @@ public class GameScreen2Activity extends AppCompatActivity implements Subscriber
         nameField = findViewById(R.id.nameField);
         healthField = findViewById(R.id.healthField);
         difficultyField = findViewById(R.id.difficultyField);
-        nextBtn = findViewById(R.id.NextButton);
         scoreDisplay = findViewById(R.id.scoreDisplay);
 
         initGameTiles();
@@ -77,12 +76,6 @@ public class GameScreen2Activity extends AppCompatActivity implements Subscriber
         gameScreenViewModel.addEnemy(2, 1, 3);
         gameScreenViewModel.addEnemy(3, 8, 2);
         drawGameWorld();
-
-        nextBtn.setOnClickListener(v -> {
-            newTimer.cancel();
-            Intent next = new Intent(GameScreen2Activity.this, GameScreen3Activity.class);
-            startActivity(next);
-        });
 
         // Timer to call displayNewScore every second
         newTimer.schedule(new TimerTask() {

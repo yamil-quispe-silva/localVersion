@@ -67,7 +67,6 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
         nameField = findViewById(R.id.nameField);
         healthField = findViewById(R.id.healthField);
         difficultyField = findViewById(R.id.difficultyField);
-        nextBtn = findViewById(R.id.NextButton);
         scoreDisplay = findViewById(R.id.scoreDisplay);
 
         initGameTiles();
@@ -78,12 +77,6 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
         gameScreenViewModel.addEnemy(0, 1, 3);
         gameScreenViewModel.addEnemy(1, 8, 1);
         drawGameWorld();
-
-        nextBtn.setOnClickListener(v -> {
-            newTimer.cancel();
-            Intent next = new Intent(GameScreen1Activity.this, GameScreen2Activity.class);
-            startActivity(next);
-        });
 
         gameScreenViewModel.initPlayerAttempt();
 
