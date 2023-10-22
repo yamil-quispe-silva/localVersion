@@ -82,4 +82,13 @@ public class EndScreenViewModel extends ViewModel {
             }
         }
     }
+
+    //string to be displayed
+    public String getWinStatus() {
+        if (player.getWinStatus()) {
+            return "YOU WIN!!!";
+        } else {
+            return "YOU LOSE!!!";
+        }
+    }
 }

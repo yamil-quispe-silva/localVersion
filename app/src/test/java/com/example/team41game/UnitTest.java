@@ -183,4 +183,100 @@ public class UnitTest {
         leaderboard.setTopFiveScores(expectedScores);
         assertArrayEquals(expectedScores, leaderboard.getTopFiveScores());
     }
+
+
+    /**
+     * This tests checks for wall collisions.
+     * The player should not move as it is surrounded by walls.
+     */
+
+    @Test
+    public void testCollisions() {
+        int[][] gameWorld = {
+                {1, 1, 1, 1, 1},
+                {1, 2, 1, 1, 1},
+                {1, 1, 1, 1, 1},
+        };
+
+        gameScreenViewModel.initRoom(gameWorld);
+        //move right
+        gameScreenViewModel.initPlayerPosition(1, 1);
+        gameScreenViewModel.setPlayerMovePattern(new MoveRight());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(1, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+
+        //move left
+        gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(1, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+
+        //move down
+        gameScreenViewModel.setPlayerMovePattern(new MoveDown());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(1, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+        //move up
+        gameScreenViewModel.setPlayerMovePattern(new MoveUp());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(1, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+
+    }
+
+    /**
+     * Tests general movement making sure character can move
+     * when there is no wall at there next desired position.
+     */
+    @Test
+    public void testMovement() {
+
+        int[][] gameWorld = {
+                {1, 1, 2, 1, 1},
+                {1, 2, 2, 2, 1},
+                {1, 1, 2, 1, 1},
+        };
+        // move player to the right.
+        gameScreenViewModel.initRoom(gameWorld);
+        gameScreenViewModel.initPlayerPosition(1, 1);
+        gameScreenViewModel.setPlayerMovePattern(new MoveRight());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(2, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+        // now character is in dead center of map. The  position should be able to go up from here.
+        gameScreenViewModel.setPlayerMovePattern(new MoveUp());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(2, gameScreenViewModel.getPlayerX());
+        assertEquals(0, gameScreenViewModel.getPlayerY());
+
+        // Now I will do two down movements, the player should be in the bottom center of the map.
+        gameScreenViewModel.setPlayerMovePattern(new MoveDown());
+        gameScreenViewModel.doPlayerMove();
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(2, gameScreenViewModel.getPlayerX());
+        assertEquals(2, gameScreenViewModel.getPlayerY());
+
+        // Now I will do an up and to the right movement.
+
+        gameScreenViewModel.setPlayerMovePattern(new MoveUp());
+        gameScreenViewModel.doPlayerMove();
+        gameScreenViewModel.setPlayerMovePattern(new MoveRight());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(3, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+        //testing a wall collisions, when the player tries to move right from here,
+        //the player doesn't move.
+        gameScreenViewModel.setPlayerMovePattern(new MoveRight());
+        gameScreenViewModel.doPlayerMove();
+        assertEquals(3, gameScreenViewModel.getPlayerX());
+        assertEquals(1, gameScreenViewModel.getPlayerY());
+
+    }
 }

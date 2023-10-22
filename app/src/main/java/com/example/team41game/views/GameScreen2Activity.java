@@ -160,19 +160,35 @@ public class GameScreen2Activity extends AppCompatActivity implements Subscriber
         switch (keyCode) {
         case KeyEvent.KEYCODE_DPAD_LEFT:
             gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen2Activity.this, GameScreen3Activity.class);
+                startActivity(next);
+            }
             return true;
         case KeyEvent.KEYCODE_DPAD_RIGHT:
             gameScreenViewModel.setPlayerMovePattern(new MoveRight());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen2Activity.this, GameScreen3Activity.class);
+                startActivity(next);
+            }
             return true;
         case KeyEvent.KEYCODE_DPAD_UP:
             gameScreenViewModel.setPlayerMovePattern(new MoveUp());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen2Activity.this, GameScreen3Activity.class);
+                startActivity(next);
+            }
             return true;
         case KeyEvent.KEYCODE_DPAD_DOWN:
             gameScreenViewModel.setPlayerMovePattern(new MoveDown());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen2Activity.this, GameScreen3Activity.class);
+                startActivity(next);
+            }
             return true;
         default:
             return super.onKeyDown(keyCode, event);

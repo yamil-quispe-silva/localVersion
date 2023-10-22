@@ -36,6 +36,9 @@ public class EndScreenActivity extends AppCompatActivity {
         newName.setText(newestName);
         newScore.setText(String.valueOf(newestScore));
         newStartTime.setText(newestStartTime);
+        TextView winLose = findViewById(R.id.winLabel);
+
+        winLose.setText(endScreenViewModel.getWinStatus());
 
         endScreenViewModel.updateLeaderboard(newestName, newestScore, newestStartTime);
 

@@ -13,6 +13,8 @@ public class Player {
     private Position position;
     private MovePattern movePattern;
 
+    private boolean winStatus;
+
     private Player() { }
 
     public static Player getPlayer() {
@@ -84,5 +86,13 @@ public class Player {
 
     public void doMove() {
         movePattern.move(this.position);
+    }
+
+    public boolean getWinStatus() {
+        return winStatus;
+    }
+
+    public void setWinStatus(boolean winStatus) {
+        this.winStatus = winStatus;
     }
 }

@@ -80,7 +80,6 @@ public class GameScreen3Activity extends AppCompatActivity implements Subscriber
         gameScreenViewModel.addEnemy(3, 5, 5);
         drawGameWorld();
 
-
         // Timer to call displayNewScore every second
         newTimer.schedule(new TimerTask() {
             @Override
@@ -158,24 +157,45 @@ public class GameScreen3Activity extends AppCompatActivity implements Subscriber
         drawGameWorld();
     }
 
+    //if player reaches door on this screen, set player's win status to true (win)
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
         case KeyEvent.KEYCODE_DPAD_LEFT:
             gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                gameScreenViewModel.setPlayerWinStatus(true);
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen3Activity.this, EndScreenActivity.class);
+                startActivity(next);
+            }
             return true;
         case KeyEvent.KEYCODE_DPAD_RIGHT:
             gameScreenViewModel.setPlayerMovePattern(new MoveRight());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                gameScreenViewModel.setPlayerWinStatus(true);
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen3Activity.this, EndScreenActivity.class);
+                startActivity(next);
+            }
             return true;
         case KeyEvent.KEYCODE_DPAD_UP:
             gameScreenViewModel.setPlayerMovePattern(new MoveUp());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                gameScreenViewModel.setPlayerWinStatus(true);
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen3Activity.this, EndScreenActivity.class);
+                startActivity(next);
+            }
             return true;
         case KeyEvent.KEYCODE_DPAD_DOWN:
             gameScreenViewModel.setPlayerMovePattern(new MoveDown());
-            gameScreenViewModel.doPlayerMove();
+            if (gameScreenViewModel.doPlayerMove()) {
+                gameScreenViewModel.setPlayerWinStatus(true);
+                newTimer.cancel();
+                Intent next = new Intent(GameScreen3Activity.this, EndScreenActivity.class);
+                startActivity(next);
+            }
             return true;
         default:
             return super.onKeyDown(keyCode, event);

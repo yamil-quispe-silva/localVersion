@@ -4,7 +4,6 @@ public class GameConfig {
     private Player player;
     private int difficulty;
     private static volatile GameConfig gameConfig;
-
     private GameConfig() { }
 
     public static GameConfig getGameConfig() {

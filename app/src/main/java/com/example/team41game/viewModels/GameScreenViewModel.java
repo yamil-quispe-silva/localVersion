@@ -145,14 +145,46 @@ public class GameScreenViewModel extends ViewModel {
         player.setMovePattern(movePattern);
     }
 
-    public void doPlayerMove() {
+    //return true if player is on door
+    public boolean doPlayerMove() {
         // do other movement checks here
-        if (inScreenLimit()) {
+        if (inScreenLimit() && checkWallCollisions()) {
             player.doMove();
             notifySubscribers();
         }
+        return checkForDoor();
+    }
+  
+    // Check if the player has reached a door.
+    public boolean checkForDoor() {
+        int[][] layout = room.getFloorLayout();
+        int x = player.getPosition().getX();
+        int y = player.getPosition().getY();
+
+        // Check if the player's new position corresponds to a door (6 or 7) in the layout.
+        return (layout[y][x] == 6) || (layout[y][x] == 7);
     }
 
+    public void setPlayerWinStatus(boolean winStatus) {
+        player.setWinStatus(winStatus);
+    }
+  
+    public boolean checkWallCollisions() {
+        int nextX = getPlayerX();
+        int nextY = getPlayerY();
+        if (player.getMovePattern() instanceof MoveLeft) {
+            nextX--;
+        } else if (player.getMovePattern() instanceof MoveRight) {
+            nextX++;
+        } else if (player.getMovePattern() instanceof MoveUp) {
+            nextY--;
+        } else if (player.getMovePattern() instanceof MoveDown) {
+            nextY++;
+        }
+        int nextTile = room.getFloorLayout()[nextY][nextX];
+        return (nextTile != 1) && (nextTile != 3) && (nextTile != 4) && (nextTile != 5);
+    }
+  
     public boolean inScreenLimit() {
         //check that player does not move off game screen, based on game bitmap sizes
         if (player.getMovePattern() instanceof MoveLeft) {
