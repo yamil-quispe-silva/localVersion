@@ -22,6 +22,7 @@ public class ConfigScreenViewModel extends ViewModel {
             return false;
         }
     }
+    //hola
 
     public void setDifficulty(int difficultyId, int easyButtonId, int mediumButtonId) {
         int difficulty = -1;
