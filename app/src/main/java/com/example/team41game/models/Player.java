@@ -1,5 +1,7 @@
 package com.example.team41game.models;
 
+import android.graphics.Bitmap;
+
 import com.example.team41game.MovePattern;
 import com.example.team41game.Position;
 
@@ -7,6 +9,7 @@ public class Player {
     private String name;
     private int health;
     private int avatarId;
+    private Bitmap bitmap;
     private static volatile Player player;
     private int score;
     private String startTime;
@@ -50,6 +53,14 @@ public class Player {
 
     public int getAvatarId() {
         return this.avatarId;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
     }
 
     public void setScore(int score) {

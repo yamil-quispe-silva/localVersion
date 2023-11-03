@@ -1,7 +1,15 @@
 package com.example.team41game.viewModels;
 
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+
 import androidx.lifecycle.ViewModel;
 
+import com.example.team41game.R;
+import com.example.team41game.enemyFactoryDesign.Enemy;
+import com.example.team41game.interactiveObjFactoryDesign.InteractiveObj;
 import com.example.team41game.models.GameConfig;
 import com.example.team41game.models.Player;
 
@@ -15,10 +23,11 @@ import com.example.team41game.MoveLeft;
 import com.example.team41game.MoveRight;
 import com.example.team41game.MoveUp;
 import com.example.team41game.MoveDown;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.example.team41game.models.Enemy;
 import com.example.team41game.models.Room;
 import com.example.team41game.Position;
 
@@ -26,7 +35,8 @@ public class GameScreenViewModel extends ViewModel {
     private GameConfig gameConfig;
     private Player player;
     private Room room;
-    private List<Subscriber> subscribers = new ArrayList<>();
+    private List<Subscriber> subscribersActivities = new ArrayList<>();
+    private List<Subscriber> subscribersEnemies = new ArrayList<>();
 
     public GameScreenViewModel() {
         gameConfig = GameConfig.getGameConfig();
@@ -89,7 +99,7 @@ public class GameScreenViewModel extends ViewModel {
         return player.getPosition().getY();
     }
 
-    //set player's starting position in new screen
+    // set player's starting position in new screen
     public void initPlayerPosition(int x, int y) {
         player.setPosition(new Position(x, y));
     }
@@ -99,44 +109,34 @@ public class GameScreenViewModel extends ViewModel {
         room = new Room(layout);
     }
 
-    public void addEnemy(int type, int x, int y) {
-        room.addEnemy(new Enemy(type, x, y));
+    public Room getRoom() {
+        return room;
     }
 
-    public int[] getEnemyTypes() {
-        int[] types = new int[room.getEnemies().size()];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = room.getEnemies().get(i).getType();
+    public void subscribeActivity(Subscriber subscriber) {
+        subscribersActivities.add(subscriber);
+    }
+
+    public void unsubscribeActivity(Subscriber subscriber) {
+        subscribersActivities.remove(subscriber);
+    }
+
+    public void subscribeEnemy(Subscriber subscriber) {
+        subscribersEnemies.add(subscriber);
+    }
+
+    public void unsubscribeEnemy(Subscriber subscriber) {
+        subscribersEnemies.remove(subscriber);
+    }
+
+    public void notifyActivitySubscribers() {
+        for (Subscriber s: subscribersActivities) {
+            s.update(this);
         }
-        return types;
     }
 
-    public int[] getEnemyX() {
-        int[] x = new int[room.getEnemies().size()];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = room.getEnemies().get(i).getPosition().getX();
-        }
-        return x;
-    }
-
-    public int[] getEnemyY() {
-        int[] y = new int[room.getEnemies().size()];
-        for (int i = 0; i < y.length; i++) {
-            y[i] = room.getEnemies().get(i).getPosition().getY();
-        }
-        return y;
-    }
-
-    public void subscribe(Subscriber subscriber) {
-        subscribers.add(subscriber);
-    }
-
-    public void unsubscribe(Subscriber subscriber) {
-        subscribers.remove(subscriber);
-    }
-
-    public void notifySubscribers() {
-        for (Subscriber s: subscribers) {
+    public void notifyEnemySubscribers() {
+        for (Subscriber s: subscribersEnemies) {
             s.update(this);
         }
     }
@@ -145,31 +145,43 @@ public class GameScreenViewModel extends ViewModel {
         player.setMovePattern(movePattern);
     }
 
-    //return true if player is on door
-    public boolean doPlayerMove() {
-        // do other movement checks here
-        if (inScreenLimit() && checkWallCollisions()) {
-            player.doMove();
-            notifySubscribers();
-        }
-        return checkForDoor();
-    }
-  
-    // Check if the player has reached a door.
-    public boolean checkForDoor() {
-        int[][] layout = room.getFloorLayout();
-        int x = player.getPosition().getX();
-        int y = player.getPosition().getY();
-
-        // Check if the player's new position corresponds to a door (6 or 7) in the layout.
-        return (layout[y][x] == 6) || (layout[y][x] == 7);
-    }
-
     public void setPlayerWinStatus(boolean winStatus) {
         player.setWinStatus(winStatus);
     }
-  
-    public boolean checkWallCollisions() {
+
+    // Returns true if the player's movement wouldn't result in
+    // going off screen or colliding with a wall
+    public boolean isValidMove() {
+        return (inScreenLimit() && !isWallCollision());
+    }
+
+    public void movePlayer() {
+        player.doMove();
+        notifyEnemySubscribers();
+        notifyActivitySubscribers();
+    }
+
+    // Check if the player is on a door.
+    public boolean isDoorCollision(HashMap<String, List<InteractiveObj>> interactiveObjsMap) {
+        int x = player.getPosition().getX();
+        int y = player.getPosition().getY();
+        if (interactiveObjsMap.containsKey("doors")) {
+            List<InteractiveObj> doors = interactiveObjsMap.get("doors");
+            if (doors != null) {
+                for (InteractiveObj door : doors) {
+                    if (door.getType().equals("exit")
+                            && door.getPosition().getX() == x
+                            && door.getPosition().getY() == y) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // Returns true if the player's movement would result in a wall collision
+    public boolean isWallCollision() {
         int nextX = getPlayerX();
         int nextY = getPlayerY();
         if (player.getMovePattern() instanceof MoveLeft) {
@@ -182,9 +194,10 @@ public class GameScreenViewModel extends ViewModel {
             nextY++;
         }
         int nextTile = room.getFloorLayout()[nextY][nextX];
-        return (nextTile != 1) && (nextTile != 3) && (nextTile != 4) && (nextTile != 5);
+        return (nextTile == 1) || (nextTile == 3) || (nextTile == 4) || (nextTile == 5);
     }
-  
+
+    // Returns true if the player's movement would result in them going off the screen
     public boolean inScreenLimit() {
         //check that player does not move off game screen, based on game bitmap sizes
         if (player.getMovePattern() instanceof MoveLeft) {
@@ -197,5 +210,72 @@ public class GameScreenViewModel extends ViewModel {
             return player.getPosition().getY() + 1 < room.getFloorLayout().length;
         }
         return false;
+    }
+
+    public void drawEnemies(HashMap<String, List<Enemy>> enemiesMap, Canvas canvas,
+                            int tileWidth, int tileHeight) {
+        for (String enemyType: enemiesMap.keySet()) {
+            for (Enemy enemy : enemiesMap.get(enemyType)) {
+                enemy.render(canvas, tileWidth, tileHeight);
+            }
+        }
+    }
+
+    public void drawInteractiveObjs(HashMap<String, List<InteractiveObj>> interactiveObjsMap,
+                                    Canvas canvas, int tileWidth, int tileHeight) {
+        for (String interactiveObjType: interactiveObjsMap.keySet()) {
+            for (InteractiveObj interactiveObj : interactiveObjsMap.get(interactiveObjType)) {
+                interactiveObj.render(canvas, tileWidth, tileHeight);
+            }
+        }
+    }
+
+    public void moveEnemies(HashMap<String, List<Enemy>> enemiesMap) {
+        for (String enemyType: enemiesMap.keySet()) {
+            for (Enemy enemy : enemiesMap.get(enemyType)) {
+                enemy.move(getRoom());
+            }
+        }
+        notifyEnemySubscribers();
+    }
+
+    public void initPlayerBitmap(Resources res) {
+        Bitmap bitmap = BitmapFactory.decodeResource(res, getPlayerAvatar());
+        player.setBitmap(bitmap);
+    }
+
+    public Bitmap getPlayerBitmap() {
+        return player.getBitmap();
+    }
+
+    public Bitmap[] initRoomTiles(Resources res) {
+        Bitmap[] roomTiles = new Bitmap[6];
+        roomTiles[0] = BitmapFactory.decodeResource(res, R.drawable.black);
+        roomTiles[1] = BitmapFactory.decodeResource(res, R.drawable.wall_front);
+        roomTiles[2] = BitmapFactory.decodeResource(res, R.drawable.floor_light);
+        roomTiles[3] = BitmapFactory.decodeResource(res, R.drawable.wall_flag_blue);
+        roomTiles[4] = BitmapFactory.decodeResource(res, R.drawable.wall_flag_green);
+        roomTiles[5] = BitmapFactory.decodeResource(res, R.drawable.wall_flag_red);
+        return roomTiles;
+    }
+
+    public void reducePlayerHealth() {
+        switch (gameConfig.getDifficulty()) {
+        case 0:
+            player.setHealth(player.getHealth() - 1 < 0 ? 0 : player.getHealth() - 1);
+            break;
+        case 1:
+            player.setHealth(player.getHealth() - 2 < 0 ? 0 : player.getHealth() - 2);
+            break;
+        case 2:
+            player.setHealth(player.getHealth() - 3 < 0 ? 0 : player.getHealth() - 3);
+            break;
+        default:
+            player.setHealth(player.getHealth());
+        }
+    }
+
+    public boolean isPlayerDead() {
+        return player.getHealth() == 0;
     }
 }

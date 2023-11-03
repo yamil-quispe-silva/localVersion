@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:text="WIN/LOSE"
         android:textColor="#EE00FF"
-        android:textSize="70sp"
+        android:textSize="60sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
