@@ -17,10 +17,15 @@ import com.example.team41game.enemyFactoryDesign.Enemy;
 import com.example.team41game.enemyFactoryDesign.EnemyCreator;
 import com.example.team41game.enemyFactoryDesign.ZombieCreator;
 import com.example.team41game.interactiveObjFactoryDesign.BoxCreator;
+import com.example.team41game.interactiveObjFactoryDesign.Chest;
 import com.example.team41game.interactiveObjFactoryDesign.ChestCreator;
 import com.example.team41game.interactiveObjFactoryDesign.DoorCreator;
 import com.example.team41game.interactiveObjFactoryDesign.InteractiveObj;
 import com.example.team41game.interactiveObjFactoryDesign.InteractiveObjCreator;
+import com.example.team41game.itemFactoryDesign.Item;
+import com.example.team41game.itemFactoryDesign.ItemCreator;
+import com.example.team41game.itemFactoryDesign.KeyCreator;
+import com.example.team41game.viewModels.CollisionViewModel;
 import com.example.team41game.viewModels.GameScreenViewModel;
 
 import java.util.ArrayList;
@@ -47,8 +52,15 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
     private TextView difficultyField;
     private TextView scoreDisplay;
     private GameScreenViewModel gameScreenViewModel;
+    private CollisionViewModel collisionViewModel;
     private int[][] gameWorld = {
             {1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
             {1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1},
             {1, 1, 1, 1, 1, 2, 2, 1, 2, 2, 2, 1},
             {1, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1},
@@ -64,13 +76,13 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
             {0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0}
     };
     private Bitmap gameBitmap;
-    private Bitmap playerSprite;
     private Canvas canvas;
     private final int tileWidth = 42;
     private final int tileHeight = 42;
     private Resources res;
     private HashMap<String, List<Enemy>> enemiesMap = new HashMap<>();
     private HashMap<String, List<InteractiveObj>> interactiveObjsMap = new HashMap<>();
+    private HashMap<String, List<Item>> itemsMap = new HashMap<>();
     private Bitmap[] roomTiles;
 
     @Override
@@ -80,6 +92,7 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
 
         gameScreenViewModel = new ViewModelProvider(this).get(GameScreenViewModel.class);
         gameScreenViewModel.subscribeActivity(this);
+        collisionViewModel = new ViewModelProvider(this).get(CollisionViewModel.class);
         scoreTimer = new Timer();
         gameLoopTimer = new Timer();
         enemyMoveTimer = new Timer();
@@ -105,9 +118,12 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
         roomTiles = gameScreenViewModel.initRoomTiles(res);
         initEnemies();
         initInteractiveObjs();
+        initItems(); // initItems must be ran after initInteractiveObjs
         displayGameSettings();
         drawGame();
 
+        collisionViewModel.setInteractiveObjsMap(interactiveObjsMap);
+        collisionViewModel.setRoom(gameScreenViewModel.getRoom());
         gameScreenViewModel.initPlayerAttempt();
 
         // Timer to call displayNewScore every second
@@ -143,6 +159,7 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
         drawGameWorld();
         gameScreenViewModel.drawEnemies(enemiesMap, canvas, tileWidth, tileHeight);
         gameScreenViewModel.drawInteractiveObjs(interactiveObjsMap, canvas, tileWidth, tileHeight);
+        gameScreenViewModel.drawItems(itemsMap, canvas, tileWidth, tileHeight);
         drawPlayer();
     }
 
@@ -176,7 +193,7 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
 
         List<InteractiveObj> boxes = new ArrayList<>();
         InteractiveObjCreator boxCreator = new BoxCreator();
-        boxes.add(boxCreator.createInteractiveObj(6, 4, "unstacked"));
+        boxes.add(boxCreator.createInteractiveObj(6, 5, "unstacked"));
         interactiveObjsMap.put("boxes", boxes);
 
         List<InteractiveObj> doors = new ArrayList<>();
@@ -189,6 +206,22 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
                 interactiveObj.setSpriteAndBitmap(res);
             }
         }
+    }
+
+    private void initItems() {
+        List<Item> keys = new ArrayList<>();
+        ItemCreator keyCreator = new KeyCreator();
+
+        for (InteractiveObj interactiveObj : interactiveObjsMap.get("chests")) {
+            Chest chest = (Chest) interactiveObj;
+            if (chest.getType().equals("gold")) {
+                Item key = keyCreator.createItem(res);
+                chest.setContents(key);
+                key.setContainer(chest);
+                keys.add(key);
+            }
+        }
+        itemsMap.put("keys", keys);
     }
 
     private void drawPlayer() {
@@ -230,39 +263,50 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
         switch (keyCode) {
         case KeyEvent.KEYCODE_A:
             gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
-            if (gameScreenViewModel.isValidMove()) {
+            collisionViewModel.handleBoxCollision();
+            if (collisionViewModel.isValidMove()) {
                 gameScreenViewModel.movePlayer();
                 displayGameSettings();
                 checkForLoss();
-                checkForDoor();
+                checkForExitCollision();
             }
             return true;
         case KeyEvent.KEYCODE_D:
             gameScreenViewModel.setPlayerMovePattern(new MoveRight());
-            if (gameScreenViewModel.isValidMove()) {
+            collisionViewModel.handleBoxCollision();
+            if (collisionViewModel.isValidMove()) {
                 gameScreenViewModel.movePlayer();
                 displayGameSettings();
                 checkForLoss();
-                checkForDoor();
+                checkForExitCollision();
             }
             return true;
         case KeyEvent.KEYCODE_W:
             gameScreenViewModel.setPlayerMovePattern(new MoveUp());
-            if (gameScreenViewModel.isValidMove()) {
+            collisionViewModel.handleBoxCollision();
+            if (collisionViewModel.isValidMove()) {
                 gameScreenViewModel.movePlayer();
                 displayGameSettings();
                 checkForLoss();
-                checkForDoor();
+                checkForExitCollision();
             }
             return true;
         case KeyEvent.KEYCODE_S:
             gameScreenViewModel.setPlayerMovePattern(new MoveDown());
-            if (gameScreenViewModel.isValidMove()) {
+            collisionViewModel.handleBoxCollision();
+            if (collisionViewModel.isValidMove()) {
                 gameScreenViewModel.movePlayer();
                 displayGameSettings();
                 checkForLoss();
-                checkForDoor();
+                checkForExitCollision();
             }
+            return true;
+        case KeyEvent.KEYCODE_E:
+            collisionViewModel.handleChestInteraction();
+            collisionViewModel.handleDoorInteraction();
+            return true;
+        case KeyEvent.KEYCODE_SPACE:
+            collisionViewModel.handleItemAcquisition();
             return true;
         default:
             return super.onKeyDown(keyCode, event);
@@ -274,8 +318,9 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
         gameLoopTimer.cancel();
         enemyMoveTimer.cancel();
     }
-    public void checkForDoor() {
-        if (gameScreenViewModel.isDoorCollision(interactiveObjsMap)) {
+
+    public void checkForExitCollision() {
+        if (collisionViewModel.isExitCollision()) {
             cancelTimers();
             Intent next = new Intent(GameScreen1Activity.this, GameScreen2Activity.class);
             startActivity(next);
@@ -284,6 +329,8 @@ public class GameScreen1Activity extends AppCompatActivity implements Subscriber
 
     public void checkForLoss() {
         if (gameScreenViewModel.isPlayerDead()) {
+            gameScreenViewModel.clearPlayerInventory();
+            gameScreenViewModel.clearPlayerScore();
             gameScreenViewModel.setPlayerWinStatus(false);
             cancelTimers();
             Intent endGame = new Intent(GameScreen1Activity.this, EndScreenActivity.class);

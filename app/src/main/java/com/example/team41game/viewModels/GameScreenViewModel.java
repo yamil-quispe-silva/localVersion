@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.team41game.R;
 import com.example.team41game.enemyFactoryDesign.Enemy;
 import com.example.team41game.interactiveObjFactoryDesign.InteractiveObj;
+import com.example.team41game.itemFactoryDesign.Item;
 import com.example.team41game.models.GameConfig;
 import com.example.team41game.models.Player;
 
@@ -19,10 +20,6 @@ import java.util.Date;
 
 import com.example.team41game.Subscriber;
 import com.example.team41game.MovePattern;
-import com.example.team41game.MoveLeft;
-import com.example.team41game.MoveRight;
-import com.example.team41game.MoveUp;
-import com.example.team41game.MoveDown;
 
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +87,13 @@ public class GameScreenViewModel extends ViewModel {
     public String getScore() {
         return String.format("Score: %d", player.getScore());
     }
+    public Position getPlayerPosition() {
+        return player.getPosition();
+    }
+
+    public MovePattern getPlayerMovePattern() {
+        return player.getMovePattern();
+    }
 
     public int getPlayerX() {
         return player.getPosition().getX();
@@ -149,67 +153,10 @@ public class GameScreenViewModel extends ViewModel {
         player.setWinStatus(winStatus);
     }
 
-    // Returns true if the player's movement wouldn't result in
-    // going off screen or colliding with a wall
-    public boolean isValidMove() {
-        return (inScreenLimit() && !isWallCollision());
-    }
-
     public void movePlayer() {
         player.doMove();
         notifyEnemySubscribers();
         notifyActivitySubscribers();
-    }
-
-    // Check if the player is on a door.
-    public boolean isDoorCollision(HashMap<String, List<InteractiveObj>> interactiveObjsMap) {
-        int x = player.getPosition().getX();
-        int y = player.getPosition().getY();
-        if (interactiveObjsMap.containsKey("doors")) {
-            List<InteractiveObj> doors = interactiveObjsMap.get("doors");
-            if (doors != null) {
-                for (InteractiveObj door : doors) {
-                    if (door.getType().equals("exit")
-                            && door.getPosition().getX() == x
-                            && door.getPosition().getY() == y) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    // Returns true if the player's movement would result in a wall collision
-    public boolean isWallCollision() {
-        int nextX = getPlayerX();
-        int nextY = getPlayerY();
-        if (player.getMovePattern() instanceof MoveLeft) {
-            nextX--;
-        } else if (player.getMovePattern() instanceof MoveRight) {
-            nextX++;
-        } else if (player.getMovePattern() instanceof MoveUp) {
-            nextY--;
-        } else if (player.getMovePattern() instanceof MoveDown) {
-            nextY++;
-        }
-        int nextTile = room.getFloorLayout()[nextY][nextX];
-        return (nextTile == 1) || (nextTile == 3) || (nextTile == 4) || (nextTile == 5);
-    }
-
-    // Returns true if the player's movement would result in them going off the screen
-    public boolean inScreenLimit() {
-        //check that player does not move off game screen, based on game bitmap sizes
-        if (player.getMovePattern() instanceof MoveLeft) {
-            return player.getPosition().getX() - 1 >= 0;
-        } else if (player.getMovePattern() instanceof MoveRight) {
-            return player.getPosition().getX() + 1 < room.getFloorLayout()[0].length;
-        } else if (player.getMovePattern() instanceof MoveUp) {
-            return player.getPosition().getY() - 1 >= 0;
-        } else if (player.getMovePattern() instanceof MoveDown) {
-            return player.getPosition().getY() + 1 < room.getFloorLayout().length;
-        }
-        return false;
     }
 
     public void drawEnemies(HashMap<String, List<Enemy>> enemiesMap, Canvas canvas,
@@ -228,6 +175,20 @@ public class GameScreenViewModel extends ViewModel {
                 interactiveObj.render(canvas, tileWidth, tileHeight);
             }
         }
+    }
+
+    public void drawItems(HashMap<String, List<Item>> itemsMap,
+                          Canvas canvas, int tileWidth, int tileHeight) {
+        for (String itemType: itemsMap.keySet()) {
+            if (itemsMap.get(itemType) != null) {
+                for (Item item : itemsMap.get(itemType)) {
+                    if (item.justDiscovered()) {
+                        item.render(canvas, tileWidth, tileHeight);
+                    }
+                }
+            }
+        }
+
     }
 
     public void moveEnemies(HashMap<String, List<Enemy>> enemiesMap) {
@@ -259,16 +220,18 @@ public class GameScreenViewModel extends ViewModel {
         return roomTiles;
     }
 
-    public void reducePlayerHealth() {
+    public void reducePlayerHealth(int damage) {
         switch (gameConfig.getDifficulty()) {
         case 0:
-            player.setHealth(player.getHealth() - 1 < 0 ? 0 : player.getHealth() - 1);
+            player.setHealth(player.getHealth() - damage < 0 ? 0 : player.getHealth() - damage);
             break;
         case 1:
-            player.setHealth(player.getHealth() - 2 < 0 ? 0 : player.getHealth() - 2);
+            int mDamage = damage + 1;
+            player.setHealth(player.getHealth() - mDamage < 0 ? 0 : player.getHealth() - mDamage);
             break;
         case 2:
-            player.setHealth(player.getHealth() - 3 < 0 ? 0 : player.getHealth() - 3);
+            int hDamage = damage + 2;
+            player.setHealth(player.getHealth() - hDamage < 0 ? 0 : player.getHealth() - hDamage);
             break;
         default:
             player.setHealth(player.getHealth());
@@ -277,5 +240,17 @@ public class GameScreenViewModel extends ViewModel {
 
     public boolean isPlayerDead() {
         return player.getHealth() == 0;
+    }
+
+    public void clearPlayerInventory() {
+        HashMap<String, Item> inventory = player.getInventory();
+        if (inventory != null) {
+            // sets the value of each item type to null in player's inventory
+            inventory.replaceAll((t, v) -> null);
+        }
+    }
+
+    public void clearPlayerScore() {
+        player.setScore(0);
     }
 }

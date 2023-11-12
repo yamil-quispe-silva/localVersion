@@ -22,7 +22,6 @@ public class ConfigScreenViewModel extends ViewModel {
             return false;
         }
     }
-    //hola
 
     public void setDifficulty(int difficultyId, int easyButtonId, int mediumButtonId) {
         int difficulty = -1;
@@ -37,7 +36,7 @@ public class ConfigScreenViewModel extends ViewModel {
     }
 
     public void setModelAttributes(int selectedAvatarResourceId) {
-        player.setHealth(15 - (gameConfig.getDifficulty() * 5));
+        player.setHealth(30 - (gameConfig.getDifficulty() * 10));
         player.setAvatarId(selectedAvatarResourceId);
         gameConfig.setPlayer(player);
     }

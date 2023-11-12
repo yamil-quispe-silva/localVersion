@@ -4,6 +4,9 @@ import android.graphics.Bitmap;
 
 import com.example.team41game.MovePattern;
 import com.example.team41game.Position;
+import com.example.team41game.itemFactoryDesign.Item;
+
+import java.util.HashMap;
 
 public class Player {
     private String name;
@@ -15,8 +18,8 @@ public class Player {
     private String startTime;
     private Position position;
     private MovePattern movePattern;
-
     private boolean winStatus;
+    private HashMap<String, Item> inventory = new HashMap<>();
 
     private Player() { }
 
@@ -105,5 +108,13 @@ public class Player {
 
     public void setWinStatus(boolean winStatus) {
         this.winStatus = winStatus;
+    }
+
+    public HashMap<String, Item> getInventory() {
+        return this.inventory;
+    }
+
+    public void addToInventory(String key, Item item) {
+        this.inventory.put(key, item);
     }
 }

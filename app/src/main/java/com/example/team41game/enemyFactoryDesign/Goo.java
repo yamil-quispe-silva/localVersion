@@ -18,6 +18,7 @@ public class Goo implements Enemy {
     private final int sprite = R.drawable.monster_elemental_goo;
     private Bitmap bitmap;
     private MovePattern movePattern;
+    private int damage = 2;
 
     public Goo(int x, int y) {
         this.position = new Position(x, y);
@@ -66,7 +67,7 @@ public class Goo implements Enemy {
     public void update(GameScreenViewModel subject) {
         if (subject.getPlayerX() == this.position.getX()
                 && subject.getPlayerY() == this.position.getY()) {
-            subject.reducePlayerHealth();
+            subject.reducePlayerHealth(damage);
         }
     }
 }

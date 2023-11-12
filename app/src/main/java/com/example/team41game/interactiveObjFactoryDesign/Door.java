@@ -49,4 +49,8 @@ public class Door implements InteractiveObj {
         this.isOpen = true;
         setSpriteAndBitmap(this.res);
     }
+
+    public Boolean isOpen() {
+        return this.isOpen;
+    }
 }

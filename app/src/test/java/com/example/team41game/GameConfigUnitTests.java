@@ -70,17 +70,17 @@ public class GameConfigUnitTests {
      */
     @Test
     public void testSetModelAttributesHealth() {
-        int easyHealth = 15;
+        int easyHealth = 30;
         gameConfig.setDifficulty(0);
         configScreenViewModel.setModelAttributes(-1); // not testing avatar ID assignment
         assertEquals(easyHealth, player.getHealth());
 
-        int mediumHealth = 10;
+        int mediumHealth = 20;
         gameConfig.setDifficulty(1);
         configScreenViewModel.setModelAttributes(-1); // not testing avatar ID assignment
         assertEquals(mediumHealth, player.getHealth());
 
-        int hardHealth = 5;
+        int hardHealth = 10;
         gameConfig.setDifficulty(2);
         configScreenViewModel.setModelAttributes(-1); // not testing avatar ID assignment
         assertEquals(hardHealth, player.getHealth());

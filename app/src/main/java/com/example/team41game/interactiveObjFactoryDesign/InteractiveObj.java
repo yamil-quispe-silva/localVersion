@@ -11,4 +11,5 @@ public interface InteractiveObj {
     void setSpriteAndBitmap(Resources res);
     void render(Canvas canvas, int tileWidth, int tileHeight);
     void open();
+    Boolean isOpen();
 }

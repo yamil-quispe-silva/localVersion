@@ -11,11 +11,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import com.example.team41game.enemyFactoryDesign.Enemy;
+import com.example.team41game.enemyFactoryDesign.ZombieCreator;
+import com.example.team41game.enemyFactoryDesign.EnemyCreator;
 import com.example.team41game.interactiveObjFactoryDesign.DoorCreator;
 import com.example.team41game.interactiveObjFactoryDesign.InteractiveObj;
 import com.example.team41game.interactiveObjFactoryDesign.InteractiveObjCreator;
 import com.example.team41game.models.GameConfig;
 import com.example.team41game.models.Player;
+import com.example.team41game.viewModels.CollisionViewModel;
 import com.example.team41game.viewModels.GameScreenViewModel;
 
 /**
@@ -25,14 +29,18 @@ public class GameScreenUnitTests {
     private GameConfig gameConfig;
     private Player player;
     private GameScreenViewModel gameScreenViewModel;
+    private CollisionViewModel collisionViewModel;
 
     @Before
     public void setup() {
         player = Player.getPlayer();
         gameConfig = GameConfig.getGameConfig();
+        gameConfig.setPlayer(player);
         gameScreenViewModel = new GameScreenViewModel();
+        collisionViewModel = new CollisionViewModel();
+        collisionViewModel.setInteractiveObjsMap(new HashMap<>());
     }
-  
+
     /**
      * Test that updateScore correctly alters the player's score (Sprint 2)
      */
@@ -176,42 +184,43 @@ public class GameScreenUnitTests {
                 {0, 0, 0, 0, 1, 6, 1, 0, 0, 0, 0}
         };
         gameScreenViewModel.initRoom(layout);
+        collisionViewModel.setRoom(gameScreenViewModel.getRoom());
         Position position = new Position(1, 0);
 
         // (1, 0) is valid position that a player can move left from
         player.setPosition(position);
         gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
-        assertTrue(gameScreenViewModel.inScreenLimit());
+        assertTrue(collisionViewModel.inScreenLimit());
 
         // (0, 0) is invalid position for a player to move left from
         position.setX(0);
-        assertFalse(gameScreenViewModel.inScreenLimit());
+        assertFalse(collisionViewModel.inScreenLimit());
 
         // (0, 0) is valid position that a player can move right from
         gameScreenViewModel.setPlayerMovePattern(new MoveRight());
-        assertTrue(gameScreenViewModel.inScreenLimit());
+        assertTrue(collisionViewModel.inScreenLimit());
 
         // (layout[0].length - 1, 0) is invalid position for player to move right from
         position.setX(layout[0].length - 1);
-        assertFalse(gameScreenViewModel.inScreenLimit());
+        assertFalse(collisionViewModel.inScreenLimit());
 
         // (0, 1) is valid position that a player can move up from
         position.setX(0);
         position.setY(1);
         gameScreenViewModel.setPlayerMovePattern(new MoveUp());
-        assertTrue(gameScreenViewModel.inScreenLimit());
+        assertTrue(collisionViewModel.inScreenLimit());
 
         // (0, 0) is invalid position for a player to move up from
         position.setY(0);
-        assertFalse(gameScreenViewModel.inScreenLimit());
+        assertFalse(collisionViewModel.inScreenLimit());
 
         // (0, 0) is valid position that a player can move down from
         gameScreenViewModel.setPlayerMovePattern(new MoveDown());
-        assertTrue(gameScreenViewModel.inScreenLimit());
+        assertTrue(collisionViewModel.inScreenLimit());
 
         // (0, layout.length - 1) is invalid position for player to move down from
         position.setY(layout.length - 1);
-        assertFalse(gameScreenViewModel.inScreenLimit());
+        assertFalse(collisionViewModel.inScreenLimit());
     }
 
     /**
@@ -247,14 +256,17 @@ public class GameScreenUnitTests {
         InteractiveObjCreator doorCreator = new DoorCreator();
         doors.add(doorCreator.createInteractiveObj(3, 1, "exit"));
         interactiveObjsMap.put("doors", doors);
+        collisionViewModel.setInteractiveObjsMap(interactiveObjsMap);
 
         // Set position to the door
-        gameScreenViewModel.initPlayerPosition(3, 1);
-        assertTrue(gameScreenViewModel.isDoorCollision(interactiveObjsMap));
+        gameScreenViewModel.initPlayerPosition(3, 0);
+        assertTrue(collisionViewModel.isDoorCollision(gameScreenViewModel.getPlayerPosition(),
+                new MoveDown()));
 
         //Set position away from door
         gameScreenViewModel.initPlayerPosition(2, 1);
-        assertFalse(gameScreenViewModel.isDoorCollision(interactiveObjsMap));
+        assertFalse(collisionViewModel.isDoorCollision(gameScreenViewModel.getPlayerPosition(),
+                gameScreenViewModel.getPlayerMovePattern()));
     }
 
     /**
@@ -325,7 +337,7 @@ public class GameScreenUnitTests {
      * This tests ensures that a player can't move into a wall (Sprint 3)
      */
     @Test
-    public void testCollisions() {
+    public void testWallCollisions() {
         int[][] gameWorld = {
                 {1, 1, 1, 1},
                 {1, 2, 2, 1},
@@ -333,11 +345,14 @@ public class GameScreenUnitTests {
         };
 
         gameScreenViewModel.initRoom(gameWorld);
+        collisionViewModel.setRoom(gameScreenViewModel.getRoom());
+        // we create an empty map because there are no chests, boxes, or doors in the gameWorld
+        HashMap<String, List<InteractiveObj>> emptyMap = new HashMap<>();
 
         // move right
         gameScreenViewModel.initPlayerPosition(1, 1);
         gameScreenViewModel.setPlayerMovePattern(new MoveRight());
-        if (gameScreenViewModel.isValidMove()) {
+        if (collisionViewModel.isValidMove()) {
             gameScreenViewModel.movePlayer();
         }
         assertEquals(2, gameScreenViewModel.getPlayerX());
@@ -345,7 +360,7 @@ public class GameScreenUnitTests {
 
         // move left
         gameScreenViewModel.setPlayerMovePattern(new MoveLeft());
-        if (gameScreenViewModel.isValidMove()) {
+        if (collisionViewModel.isValidMove()) {
             gameScreenViewModel.movePlayer();
         }
         assertEquals(1, gameScreenViewModel.getPlayerX());
@@ -353,7 +368,7 @@ public class GameScreenUnitTests {
 
         // Try to move down. This move would result in a wall collision, so player doesn't move
         gameScreenViewModel.setPlayerMovePattern(new MoveDown());
-        if (gameScreenViewModel.isValidMove()) {
+        if (collisionViewModel.isValidMove()) {
             gameScreenViewModel.movePlayer();
         }
         assertEquals(1, gameScreenViewModel.getPlayerX());
@@ -361,10 +376,75 @@ public class GameScreenUnitTests {
 
         // Try to move up. This move would result in a wall collision, so player doesn't move
         gameScreenViewModel.setPlayerMovePattern(new MoveUp());
-        if (gameScreenViewModel.isValidMove()) {
+        if (collisionViewModel.isValidMove()) {
             gameScreenViewModel.movePlayer();
         }
         assertEquals(1, gameScreenViewModel.getPlayerX());
         assertEquals(1, gameScreenViewModel.getPlayerY());
+    }
+
+    /**
+     * Test that player's health is properly reduced depending on difficulty and given damage value
+     * (Sprint 4)
+     */
+    @Test
+    public void testReducePlayerHealth() {
+        player.setHealth(100);
+        gameConfig.setDifficulty(0);
+        gameScreenViewModel.reducePlayerHealth(10);
+        assertEquals(90, player.getHealth());
+
+        player.setHealth(100);
+        gameConfig.setDifficulty(1);
+        gameScreenViewModel.reducePlayerHealth(10);
+        assertEquals(89, player.getHealth());
+
+        player.setHealth(100);
+        gameConfig.setDifficulty(2);
+        gameScreenViewModel.reducePlayerHealth(10);
+        assertEquals(88, player.getHealth());
+
+        //might not be needed
+        player.setHealth(100);
+        gameConfig.setDifficulty(4);
+        gameScreenViewModel.reducePlayerHealth(100);
+        assertEquals(100, player.getHealth());
+
+    }
+
+    /**
+     * Test that player is correctly confirmed to be dead when health is 0 (Sprint 4)
+     */
+    @Test
+    public void testIsPlayerDead() {
+        player.setHealth(0);
+        assertTrue(gameScreenViewModel.isPlayerDead());
+
+        player.setHealth(1);
+        assertFalse(gameScreenViewModel.isPlayerDead());
+    }
+
+    /**
+     * This tests that an enemy's update method correctly reduces the player's health
+     * if the player and enemy are colliding (Sprint 4)
+     */
+    @Test
+    public void testEnemyUpdateReducesPlayerHealth() {
+        EnemyCreator zombieCreator = new ZombieCreator();
+        Enemy zombie = zombieCreator.createEnemy(0, 0);
+        int startingHealth = 10;
+        gameConfig.setDifficulty(0);
+
+        // the player is colliding with the zombie at (0, 0), so player health will decrease
+        player.setHealth(startingHealth);
+        player.setPosition(new Position(0, 0));
+        zombie.update(gameScreenViewModel);
+        assertTrue(player.getHealth() < 10);
+
+        // the player is not colliding with the zombie, so player health won't change
+        player.setHealth(startingHealth);
+        player.setPosition(new Position(1, 0));
+        zombie.update(gameScreenViewModel);
+        assertEquals(startingHealth, player.getHealth());
     }
 }

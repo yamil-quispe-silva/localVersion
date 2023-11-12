@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 
 import com.example.team41game.Position;
 import com.example.team41game.R;
+import com.example.team41game.itemFactoryDesign.Item;
 
 public class Chest implements InteractiveObj {
     private Position position;
@@ -15,7 +16,7 @@ public class Chest implements InteractiveObj {
     private Boolean isOpen;
     private int sprite;
     private Bitmap bitmap;
-    private int contents;
+    private Item contents;
 
     public Chest(int x, int y, String type) {
         this.position = new Position(x, y);
@@ -31,21 +32,21 @@ public class Chest implements InteractiveObj {
         return this.type;
     }
 
-    public int getContents() {
+    public Item getContents() {
         return this.contents;
     }
 
-    public void setContents(int contents) {
-        this.contents = contents;
+    public void setContents(Item item) {
+        this.contents = item;
     }
 
     public void setSpriteAndBitmap(Resources res) {
         this.res = res;
         if (isOpen) {
             if (this.type.equals("silver")) {
-                this.sprite = R.drawable.chest_open_full;
+                this.sprite = R.drawable.chest_open_empty;
             } else {
-                this.sprite = R.drawable.chest_golden_open_full;
+                this.sprite = R.drawable.chest_golden_open_empty;
             }
         } else {
             if (this.type.equals("silver")) {
@@ -65,5 +66,9 @@ public class Chest implements InteractiveObj {
     public void open() {
         this.isOpen = true;
         setSpriteAndBitmap(this.res);
+    }
+
+    public Boolean isOpen() {
+        return this.isOpen;
     }
 }

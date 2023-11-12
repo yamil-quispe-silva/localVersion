@@ -24,4 +24,23 @@ public class Position {
     public void setY(int y) {
         this.y = y;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        // a Position is equal to itself
+        if (obj == this) {
+            return true;
+        }
+
+        // a Position can only be equal to another Position
+        if (!(obj instanceof Position)) {
+            return false;
+        }
+
+        // make the compared to object a Position
+        Position pos2 = (Position) obj;
+
+        // two positions are equal if they have the same x and y values
+        return (this.x == pos2.getX() && this.y == pos2.getY());
+    }
 }

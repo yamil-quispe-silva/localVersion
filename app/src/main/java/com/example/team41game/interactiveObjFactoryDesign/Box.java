@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
+import com.example.team41game.MovePattern;
 import com.example.team41game.Position;
 import com.example.team41game.R;
 
@@ -16,6 +17,7 @@ public class Box implements InteractiveObj {
     private int sprite;
     private Bitmap bitmap;
     private int contents;
+    private MovePattern movePattern;
 
     public Box(int x, int y, String type) {
         this.position = new Position(x, y);
@@ -37,6 +39,9 @@ public class Box implements InteractiveObj {
 
     public void setContents(int contents) {
         this.contents = contents;
+    }
+    public void setMovePattern(MovePattern movePattern) {
+        this.movePattern = movePattern;
     }
 
     public void setSpriteAndBitmap(Resources res) {
@@ -60,5 +65,13 @@ public class Box implements InteractiveObj {
     public void open() {
         this.isOpen = true;
         setSpriteAndBitmap(this.res);
+    }
+
+    public Boolean isOpen() {
+        return this.isOpen;
+    }
+
+    public void doMove() {
+        movePattern.move(this.position);
     }
 }
